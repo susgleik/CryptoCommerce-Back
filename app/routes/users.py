@@ -276,7 +276,10 @@ async def toggle_user_type(
     return {
         "message": f"User type changed to {user.user_type} successfully"
     }
+    
 
+    
+#stats section delete 
 @router.get("/stats", response_model=dict)
 async def get_user_stats(
     current_user: User = Depends(get_current_admin),

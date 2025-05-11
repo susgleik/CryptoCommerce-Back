@@ -6,7 +6,9 @@ from decouple import config
 from sqlalchemy.pool import QueuePool
 
 # Construir URL de conexión desde variables de entorno
-DATABASE_URL = f"mysql+pymysql://{config('DB_USER')}:{config('DB_PASSWORD')}@{config('DB_HOST')}:{config('DB_PORT')}/{config('DB_NAME')}"
+DATABASE_URL = "mysql+pymysql://root:123456@host.docker.internal:3306/bookstore"
+
+print(DATABASE_URL)
 
 # Configuración del engine con retry
 engine = create_engine(
