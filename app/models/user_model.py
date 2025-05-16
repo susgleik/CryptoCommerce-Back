@@ -23,9 +23,14 @@ class User(Base):
     )
     last_login = Column(DateTime, nullable=True)
     
-    profile = relationship("UserProfile", back_populates="user", uselist=False, cascade="all, delete-orphan")
+    # Referencias a otros modelos (estos se definirán en sus respectivos archivos)
     payment_methods = relationship("UserPaymentMethod", back_populates="user", cascade="all, delete-orphan")
-    shopping_cart = relationship("ShoppingCart", back_populates="user", cascade="all, delete-orphan")
+    shopping_carts = relationship("ShoppingCart", back_populates="user", cascade="all, delete-orphan")
+    wishlists = relationship("Wishlist", back_populates="user", cascade="all, delete-orphan")
+    orders = relationship("Order", back_populates="user")
+    reviews = relationship("ProductReview", back_populates="user")
+    store_staff = relationship("StoreStaff", back_populates="user")
+    admin_logs = relationship("AdminActionLog", back_populates="user")
 
     
     def __repr__(self):
