@@ -1,5 +1,5 @@
-from sqlalchemy import Column, Integer, String, Text, DECIMAL, Date, ForeignKey, TIMESTAMP, Table, DateTime, JSON
-from sqlalchemy.orm import relationship
+from sqlalchemy import Column, Integer, String, Text, DECIMAL, Date, ForeignKey, TIMESTAMP, Table, DateTime, JSON, Boolean, Enum
+from sqlalchemy.orm import relationship, backref
 from sqlalchemy.sql import func
 from ..database.database import Base
 
@@ -30,7 +30,7 @@ class Product(Base):
     product_id = Column(Integer, primary_key=True, autoincrement=True)
     supplier_id = Column(Integer, ForeignKey('suppliers.supplier', ondelete="CASCADE"))
     name = Column(String(255), nullable=False)
-    price = DECIMAL((10,2), nullable=False) 
+    price = Column(DECIMAL (10,2), nullable=False)
     product_image = Column(String(255))
     description = Column(Text)
     online_stock = Column(Integer, nullable=False, default=0)
@@ -76,7 +76,7 @@ class Category(Base):
     
     # Relaciones
     products = relationship("Product", secondary="product_categories", back_populates="categories")
-    subcategories = relationship("Category", backref=relationship.backref("parent", remote_side=[category_id]))
+    subcategories = relationship("Category", backref=backref("parent", remote_side=[category_id]))
     discounts = relationship("Discount", secondary="category_discounts", back_populates="categories")
     
     def __repr__(self):

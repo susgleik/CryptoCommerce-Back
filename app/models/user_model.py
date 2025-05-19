@@ -1,5 +1,5 @@
 # app/models/user_model.py
-from sqlalchemy import Column, Integer, String, DateTime, Enum, Boolean, Foreingkey
+from sqlalchemy import Column, Integer, String, DateTime, Enum, Boolean, ForeignKey, Text
 from sqlalchemy.sql import func
 from ..database.database import Base
 from sqlalchemy.orm import relationship
@@ -31,6 +31,7 @@ class User(Base):
     reviews = relationship("ProductReview", back_populates="user")
     store_staff = relationship("StoreStaff", back_populates="user")
     admin_logs = relationship("AdminActionLog", back_populates="user")
+    profile = relationship("UserProfile", uselist=False, back_populates="user")
 
     
     def __repr__(self):
@@ -41,7 +42,7 @@ class UserProfile(Base):
     __tablename__ = "user_profiles"
     
     profile_id = Column(Integer, primary_key=True, autoincrement=True)
-    user_id =  Column(Integer, Foreignkey('users.user_id', ondelete="CASCADE"), nullable=False)
+    user_id =  Column(Integer, ForeignKey('users.user_id', ondelete="CASCADE"), nullable=False)
     first_name = Column(String(100))
     last_name = Column(String(100))
     address =  Column(Text)

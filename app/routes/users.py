@@ -45,13 +45,13 @@ def register_user(
             username=user.username,
             email=user.email,
             password_hash=get_password_hash(user.password),
-            user_type=user.user_type  # Usará 'common' si no se especifica
+            user_type=user.user_type,  # Usará 'common' si no se especifica
+            is_active=True
         )
         
         db.add(db_user)
         db.commit()
         db.refresh(db_user)
-        
         return db_user
     except Exception as e:
         db.rollback()
@@ -98,6 +98,7 @@ async def login(
             detail=str(e)
         )
 
+"""
 @router.get(
     "/users/me",
     response_model=user_schemas.UserResponse,
@@ -285,9 +286,7 @@ async def get_user_stats(
     current_user: User = Depends(get_current_admin),
     db: Session = Depends(get_db)
 ):
-    """
-    Obtiene estadísticas sobre los usuarios (solo para administradores)
-    """
+    #Obtiene estadísticas sobre los usuarios (solo para administradores)  
     total_users = db.query(User).count()
     common_users = db.query(User).filter(User.user_type == 'common').count()
     admin_users = db.query(User).filter(User.user_type == 'admin').count()
@@ -297,3 +296,5 @@ async def get_user_stats(
         "common_users": common_users,
         "admin_users": admin_users
     }
+    
+    """
