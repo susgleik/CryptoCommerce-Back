@@ -1,7 +1,7 @@
-from fastapi import APIRouter, Depends, HTTPException, status, UploadFile, File, Query
+from fastapi import APIRouter, Depends, HTTPException, status, UploadFile, File, Query, Header
 from sqlalchemy.orm import Session
 from sqlalchemy.exc import IntegrityError
-from typing import List, Optional, Any
+from typing import List, Optional, Any, Annotated
 from ...database.database import get_db
 from ...models.user_model import User, UserProfile
 from ...schemas.user_schemas import UserCreate, UserResponse, UserLogin, Token, PaginatedUserResponse, UserProfileCreate
@@ -21,6 +21,17 @@ def validate_token_and_get_user(token: str, db: Session) -> User:
     Función auxiliar para validar el token y obtener el usuario
     """
     try:
+        # Verificar que el header tenga el formato correcto "Bearer <token>"
+        if not authorization or not authorization.startswith("Bearer "):
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="Invalid authorization header format. Use: Bearer <token>",
+                headers={"WWW-Authenticate": "Bearer"},
+            )
+        
+        # Extraer el token del header
+        token = authorization.split(" ")[1]
+        
         # Decodificar el token
         payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
         email: str = payload.get("sub")
@@ -28,7 +39,8 @@ def validate_token_and_get_user(token: str, db: Session) -> User:
         if email is None:
             raise HTTPException(
                 status_code=status.HTTP_401_UNAUTHORIZED,
-                detail="Invalid token: missing user email"
+                detail="Invalid token: missing user email",
+                headers={"WWW-Authenticate": "Bearer"},
             )
         
         # Buscar usuario en la base de datos
@@ -36,7 +48,8 @@ def validate_token_and_get_user(token: str, db: Session) -> User:
         if user is None:
             raise HTTPException(
                 status_code=status.HTTP_401_UNAUTHORIZED,
-                detail="User not found"
+                detail="User not found",
+                headers={"WWW-Authenticate": "Bearer"},
             )
             
         return user
@@ -44,7 +57,8 @@ def validate_token_and_get_user(token: str, db: Session) -> User:
     except JWTError:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Invalid or expired token"
+            detail="Invalid or expired token",
+            headers={"WWW-Authenticate": "Bearer"},
         )
 
 @router.get(
@@ -55,7 +69,7 @@ def validate_token_and_get_user(token: str, db: Session) -> User:
     summary="List Users (Token as Parameter)"
 )
 async def get_users(
-    token: str = Query(..., description="JWT access token obtained from login"),
+    authorization: Annotated[str, Header(description="Bearer token for authentication")] = None,
     page: int = Query(1, ge=1, description="Page number for pagination"),
     items_per_page: int = Query(10, ge=1, le=100, description="Number of items per page"),
     db: Session = Depends(get_db)
@@ -76,8 +90,15 @@ async def get_users(
     **Solo usuarios admin pueden acceder a este endpoint**
     """
     
+    if not authorization:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Authorization header is required",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
+    
     # Validar token y obtener usuario
-    current_user = validate_token_and_get_user(token, db)
+    current_user = validate_token_and_get_user(authorization, db)
     
     # Verificar si es administrador
     if current_user.user_type != 'admin':
