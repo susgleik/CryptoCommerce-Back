@@ -1,4 +1,5 @@
-from fastapi import APIRouter, Depends, HTTPException, status, UploadFile, File, Query, Header
+from fastapi import APIRouter, Depends, HTTPException, status, UploadFile, File, Query, Header, Security
+from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from sqlalchemy.orm import Session
 from sqlalchemy.exc import IntegrityError
 from typing import List, Optional, Any, Annotated
@@ -16,21 +17,16 @@ router = APIRouter()
 SECRET_KEY = "tu_clave_secreta_muy_segura"
 ALGORITHM = "HS256"
 
-def validate_token_and_get_user(token: str, db: Session) -> User:
+security = HTTPBearer()
+
+
+def validate_token_and_get_user(credentials: HTTPAuthorizationCredentials, db: Session) -> User:
     """
     Función auxiliar para validar el token y obtener el usuario
     """
     try:
-        # Verificar que el header tenga el formato correcto "Bearer <token>"
-        if not authorization or not authorization.startswith("Bearer "):
-            raise HTTPException(
-                status_code=status.HTTP_401_UNAUTHORIZED,
-                detail="Invalid authorization header format. Use: Bearer <token>",
-                headers={"WWW-Authenticate": "Bearer"},
-            )
-        
-        # Extraer el token del header
-        token = authorization.split(" ")[1]
+        # El token ya viene sin el prefijo "Bearer " gracias a HTTPBearer
+        token = credentials.credentials
         
         # Decodificar el token
         payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
@@ -61,44 +57,47 @@ def validate_token_and_get_user(token: str, db: Session) -> User:
             headers={"WWW-Authenticate": "Bearer"},
         )
 
+
 @router.get(
     "/users",
     response_model=PaginatedUserResponse,
-    description="Get a paginated list of users - Token required as parameter",
+    description="Get a paginated list of users - Admin access required",
     tags=["Users"],
-    summary="List Users (Token as Parameter)"
+    summary="List Users"
 )
 async def get_users(
-    authorization: Annotated[str, Header(description="Bearer token for authentication")] = None,
     page: int = Query(1, ge=1, description="Page number for pagination"),
     items_per_page: int = Query(10, ge=1, le=100, description="Number of items per page"),
+    credentials: HTTPAuthorizationCredentials = Security(security),
     db: Session = Depends(get_db)
 ):
     """
     Obtiene una lista paginada de usuarios.
     
-    **Parámetros requeridos:**
-    - **token**: El access_token que obtuviste del login
-    - **page**: Número de página (opcional, default: 1)
-    - **items_per_page**: Elementos por página (opcional, default: 10)
+    **Autenticación requerida:**
+    - **Bearer Token**: Click en "Authorize" para ingresar tu token
     
-    **Ejemplo de uso:**
-    ```
-    GET /users?token=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...&page=1&items_per_page=10
-    ```
+    **Parámetros opcionales:**
+    - **page**: Número de página (default: 1)
+    - **items_per_page**: Elementos por página (default: 10)
+    
+    **Pasos para usar en FastAPI Docs:**
+    1. Haz login en /auth/login para obtener el access_token
+    2. Click en el botón "Authorize" (🔒) en la parte superior
+    3. Ingresa tu token (sin "Bearer ", solo el token)
+    4. Click "Authorize"
+    5. Ahora puedes usar este endpoint
     
     **Solo usuarios admin pueden acceder a este endpoint**
     """
     
-    if not authorization:
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Authorization header is required",
-            headers={"WWW-Authenticate": "Bearer"},
-        )
+    # Debug: Imprimir información del token
+    print(f"Token received: {credentials.credentials[:20]}...")
     
     # Validar token y obtener usuario
-    current_user = validate_token_and_get_user(authorization, db)
+    current_user = validate_token_and_get_user(credentials, db)
+    
+    print(f"User authenticated: {current_user.email}, type: {current_user.user_type}")
     
     # Verificar si es administrador
     if current_user.user_type != 'admin':
