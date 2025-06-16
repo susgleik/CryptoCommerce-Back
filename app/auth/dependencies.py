@@ -10,7 +10,7 @@ from datetime import datetime
 security = HTTPBearer(auto_error=False, description="Bearer token authentication")
 
 # Configuración del JWT (asegúrate de tener estas variables en tu configuración)
-SECRET_KEY = "tu_clave_secreta"  # Cambia esto por tu clave secreta real
+SECRET_KEY = "tu_clave_secreta_muy_segura"  # Cambia esto por tu clave secreta real
 ALGORITHM = "HS256"
 
 def get_current_user(
@@ -117,6 +117,7 @@ def validate_token_and_get_user(
     try:
         # El token ya viene sin el prefijo "Bearer " gracias a HTTPBearer
         token = credentials.credentials
+        print(f"Validating token: {token[:20]}...")  # Debug: Imprimir parte del token
         
         # Decodificar el token
         payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])

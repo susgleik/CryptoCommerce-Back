@@ -37,7 +37,7 @@ def create_product(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail=f"Product with this SKU '{product.sku}' already exists"
         ) 
-        
+    """    
     if product.supplier_id:
         supplier = db.query(Supplier).filter(Supplier.supplier == product.supplier_id).first()
         if not supplier:
@@ -57,6 +57,7 @@ def create_product(
                 status_code=status.HTTP_400_BAD_REQUEST,
                 detail="One or more category IDs are invalid"
             )
+    """
             
     try:
         db_product = Product(
