@@ -3,7 +3,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from app.routes.auth import auth_users
 from app.database.database import engine, Base
 from app.routes.user import get_users
-from app.routes.product import product_creation  
+from app.routes.product import post_create
 
 Base.metadata.create_all(bind=engine)
 
@@ -47,7 +47,7 @@ app.include_router(
 )
 
 app.include_router(
-    product_creation.router,
+    post_create.router,
     prefix="/api/v1",
     tags=["Products"]
 )

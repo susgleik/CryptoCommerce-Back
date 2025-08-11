@@ -4,15 +4,13 @@ from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker
 from decouple import config
 from sqlalchemy.pool import QueuePool
+from app.config import settings
 
-# Construir URL de conexión desde variables de entorno
-DATABASE_URL = "mysql+pymysql://root:123456@host.docker.internal:3306/ecommerce"
-
-print(DATABASE_URL)
+print(f'database url:{settings.database_url}')
 
 # Configuración del engine con retry
 engine = create_engine(
-    DATABASE_URL,
+    settings.database_url,
     pool_size=5,
     max_overflow=10,
     poolclass=QueuePool,
