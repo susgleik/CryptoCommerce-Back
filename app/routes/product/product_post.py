@@ -13,7 +13,7 @@ security = HTTPBearer()
 
 
 @router.post(
-    "/products/",
+    "/",
     response_model=product_schemas.ProductResponse,
     description="se crea un nuevo producto",
     tags=["Products"]

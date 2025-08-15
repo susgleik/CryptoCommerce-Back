@@ -3,14 +3,14 @@ from fastapi.middleware.cors import CORSMiddleware
 from app.routes.auth import auth_users
 from app.database.database import engine, Base
 from app.routes.user import get_users
-from app.routes.product import post_create
+from app.routes import main_router
 
 Base.metadata.create_all(bind=engine)
 
 app = FastAPI(
-    title="BookStore API",
+    title="e-commerce API",
     description="""
-    API para el eccommerce.
+    API para el e-commerce.
     
     ## Autenticación
     
@@ -47,10 +47,9 @@ app.include_router(
 )
 
 app.include_router(
-    post_create.router,
-    prefix="/api/v1",
-    tags=["Products"]
+    main_router
 )
+
 
 """
 app.include_router(
