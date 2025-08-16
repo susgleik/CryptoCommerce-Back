@@ -1,5 +1,5 @@
 from fastapi import APIRouter, Depends, HTTPException, status, UploadFile, File, Query, Security
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session, joinedload
 from sqlalchemy.exc import IntegrityError
 from typing import List, Optional, Any
 from ...database.database import get_db
@@ -7,6 +7,7 @@ from ...models.product_model import Product, Category
 from ...schemas import product_schemas
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from ...auth.dependencies import get_current_user, get_current_admin, validate_token_and_get_user
+from ...models.product_model import ProductCategory 
 
 router = APIRouter()
 security = HTTPBearer()
@@ -37,7 +38,7 @@ def create_product(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail=f"Product with this SKU '{product.sku}' already exists"
         ) 
-    """    
+        
     if product.supplier_id:
         supplier = db.query(Supplier).filter(Supplier.supplier == product.supplier_id).first()
         if not supplier:
@@ -57,7 +58,6 @@ def create_product(
                 status_code=status.HTTP_400_BAD_REQUEST,
                 detail="One or more category IDs are invalid"
             )
-    """
             
     try:
         db_product = Product(
@@ -80,7 +80,7 @@ def create_product(
         
         if product.category_ids:
             for category_id in product.category_ids:
-                product_category = Category(
+                product_category = ProductCategory(
                     product_id=db_product.product_id,
                     category_id=category_id
                 )

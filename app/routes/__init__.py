@@ -6,8 +6,22 @@ this module is used to import all the routes
 from fastapi import APIRouter
 
 from .product import router as product_router
+from .auth import router as auth_router
+from .user import router as user_router
 
 main_router = APIRouter(prefix="/api/v1")
+
+main_router.include_router(
+    user_router,
+    prefix="/users",
+    tags=["Users"]
+)
+
+main_router.include_router(
+    auth_router,
+    prefix="/auth",
+    tags=["Authentication"]
+)
 
 main_router.include_router(
     product_router, 
@@ -17,6 +31,7 @@ main_router.include_router(
 
 __all__ = [
     "product_router",
+    "auth_router",
     ]
 
 #metada for the module 

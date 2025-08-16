@@ -9,7 +9,7 @@ class ProductBase(BaseModel):
     prince: float = Field(..., gt=0)
     description: Optional[str] = None
     online_stock: int = Field(0, ge=0)
-    sku: str = Field(..., min_length=30, max_length=50)
+    sku: str = Field(..., min_length=3, max_length=50) #change min_length to 30 in real application
     release_date: Optional[datetime] = None
     is_featured: bool = Field(False)
     is_active: bool = Field(True)
