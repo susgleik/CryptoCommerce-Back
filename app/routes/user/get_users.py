@@ -17,7 +17,7 @@ security = HTTPBearer()
 
 
 @router.get(
-    "/users",
+    "/",
     response_model=PaginatedUserResponse,
     description="Get a paginated list of users - Admin access required",
     tags=["Users"],

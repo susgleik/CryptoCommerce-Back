@@ -6,11 +6,11 @@ from ..database.database import Base
 class Supplier(Base):
     __tablename__ = "suppliers"
     
-    supplier = Column(Integer, primary_key=True, autoincrement=True)
+    supplier_id = Column(Integer, primary_key=True, autoincrement=True)
     name = Column(String(150), nullable=False)
     description = Column(Text)
     supplier_image = Column(String(255))
-    contact_info = Column(String(255))
+    contact_info = Column(Text)
     created_at = Column(DateTime, server_default=func.current_timestamp())
     updated_at = Column(DateTime, 
                         server_default=func.current_timestamp(),
@@ -28,7 +28,7 @@ class Product(Base):
     __tablename__ = "products"
     
     product_id = Column(Integer, primary_key=True, autoincrement=True)
-    supplier_id = Column(Integer, ForeignKey('suppliers.supplier', ondelete="CASCADE"))
+    supplier_id = Column(Integer, ForeignKey('suppliers.supplier_id', ondelete="CASCADE"))
     name = Column(String(255), nullable=False)
     price = Column(DECIMAL (10,2), nullable=False)
     product_image = Column(String(255))

@@ -6,7 +6,7 @@ from enum import Enum
 
 class ProductBase(BaseModel):
     name: str = Field(..., min_length=1, max_length=255)
-    prince: float = Field(..., gt=0)
+    price: float = Field(..., gt=0)
     description: Optional[str] = None
     online_stock: int = Field(0, ge=0)
     sku: str = Field(..., min_length=3, max_length=50) #change min_length to 30 in real application

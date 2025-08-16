@@ -62,7 +62,7 @@ def create_product(
     try:
         db_product = Product(
             name=product.name,
-            price=product.prince,  # Nota: hay un typo en el schema (prince vs price)
+            price=product.price,  # Nota: hay un typo en el schema (prince vs price)
             description=product.description,
             online_stock=product.online_stock,
             sku=product.sku,
