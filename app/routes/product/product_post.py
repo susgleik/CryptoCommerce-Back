@@ -6,12 +6,11 @@ from ...database.database import get_db
 from ...models.product_model import Product, Category
 from ...schemas import product_schemas
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
-from ...auth.dependencies import get_current_user, get_current_admin, validate_token_and_get_user
+from ...core.dependencies import get_current_admin_user, get_current_client_user
 from ...models.product_model import ProductCategory 
+from ...models.user_model import User
 
 router = APIRouter()
-security = HTTPBearer()
-
 
 @router.post(
     "/",
@@ -22,15 +21,8 @@ security = HTTPBearer()
 def create_product(
     product: product_schemas.ProductCreate,
     db: Session = Depends(get_db),
-    credentials: HTTPAuthorizationCredentials = Security(security),
+    current_user: User = Depends(get_current_admin_user),
 ): 
-    current_user = validate_token_and_get_user(credentials, db)
-    
-    if current_user.user_type != 'admin':
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="The user doesn't have enough privileges"
-        )
         
     existing_product = db.query(Product).filter(Product.sku == product.sku).first()
     if existing_product:

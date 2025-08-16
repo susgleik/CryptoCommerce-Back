@@ -5,8 +5,7 @@ from typing import List, Optional, Any
 from ...database.database import get_db
 from ...models.user_model import User
 from ...schemas import user_schemas
-from ...auth.dependencies import get_current_user, get_current_admin
-from ...auth.jwt_handler import create_access_token, get_password_hash, verify_password
+from ...core.jwt_handler import create_access_token, get_password_hash, verify_password
 import bcrypt
 from datetime import datetime, timezone
 

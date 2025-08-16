@@ -1,4 +1,4 @@
-# app/auth/jwt_handler.py
+# app/core/jwt_handler.py
 from datetime import datetime, timedelta
 from typing import Optional
 from jose import JWTError, jwt

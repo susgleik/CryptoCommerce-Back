@@ -7,7 +7,7 @@ from ...database.database import get_db
 from ...models.user_model import User, UserProfile
 from ...schemas.user_schemas import UserCreate, UserResponse, UserLogin, Token, PaginatedUserResponse, UserProfileCreate
 from ...auth.dependencies import get_current_user, get_current_admin, validate_token_and_get_user
-from ...auth.jwt_handler import create_access_token, get_password_hash, verify_password
+from ...core.jwt_handler import create_access_token, get_password_hash, verify_password
 from datetime import datetime, timedelta
 import os
 from jose import JWTError, jwt

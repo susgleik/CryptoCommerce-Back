@@ -1,6 +1,6 @@
 from fastapi import Depends, HTTPException, status
 from app.core.security import get_current_active_user
-from app.models.user import User, UserRole
+from app.models.user_model import User, UserRole
 
 async def get_current_admin_user(
     current_user: User = Depends(get_current_active_user)
@@ -8,7 +8,7 @@ async def get_current_admin_user(
     """
     Dependencia para verificar que el usuario actual es ADMIN_STAFF
     """
-    if current_user.role != UserRole.ADMIN_STAFF:
+    if current_user.role != UserRole.ADMIN:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="No tienes permisos para realizar esta acción. Se requiere rol ADMIN_STAFF."
@@ -21,7 +21,7 @@ async def get_current_client_user(
     """
     Dependencia para verificar que el usuario actual es CLIENT
     """
-    if current_user.role != UserRole.CLIENT:
+    if current_user.role != UserRole.COMMON:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="No tienes permisos para realizar esta acción. Se requiere rol CLIENT."

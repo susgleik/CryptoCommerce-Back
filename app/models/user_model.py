@@ -3,8 +3,13 @@ from sqlalchemy import Column, Integer, String, DateTime, Enum, Boolean, Foreign
 from sqlalchemy.sql import func
 from ..database.database import Base
 from sqlalchemy.orm import relationship
+from enum import Enum as PyEnum
 
 #modelos relacionados con los usuarios
+class UserRole(PyEnum):
+    COMMON = 'common'
+    ADMIN = 'admin'
+    STORE_STAFF = 'store_staff'
 
 class User(Base):
     __tablename__ = "users"
@@ -14,7 +19,11 @@ class User(Base):
     email = Column(String(150), unique=True, nullable=False)
     password_hash = Column(String(255), nullable=False)
     is_active = Column(Boolean, default=True)
-    user_type = Column(Enum('common', 'admin', 'store_staff'), nullable=False, default='common')
+    user_type = Column(
+        Enum(UserRole, name='user_type_enum'), 
+        nullable=False, 
+        default=UserRole.COMMON
+    )
     created_at = Column(DateTime, server_default=func.current_timestamp())
     updated_at = Column(
         DateTime, 
