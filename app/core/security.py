@@ -1,47 +1,67 @@
-from fastapi import Depends, HTTPException, status, Header
-from fastapi.security import OAuth2PasswordBearer, HTTPBearer, HTTPAuthorizationCredentials
+from fastapi import Depends, HTTPException, status
+from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from sqlalchemy.orm import Session
 from jose import JWTError, jwt
 from ..database.database import get_db
 from ..models.user_model import User
-from typing import Optional
-from datetime import datetime
-from app.config import settings
-import app.services.auth_service as auth_service
+from ..config import settings
 
-security = HTTPBearer(auto_error=False, description="Bearer token authentication")
+# Inicializar HTTPBearer UNA SOLA VEZ
+security = HTTPBearer(auto_error=False)
 
-async def get_current_user(
+def get_current_user(
     credentials: HTTPAuthorizationCredentials = Depends(security),
+    db: Session = Depends(get_db)
 ) -> User:
     """
-    Obtiene el usuario actual basado en el token Bearer.
-    Permite usar el token directamente en el header Authorization.
+    Función base para obtener el usuario actual desde el token.
+    Solo se encarga de validar el token y obtener el usuario.
     """
-    token = credentials.credentials
-    user = await auth_service.get_current_user(token)
+    if not credentials:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Token required",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
+    
+    try:
+        token = credentials.credentials
+        payload = jwt.decode(token, settings.secret_key, algorithms=[settings.algorithm])
+        email: str = payload.get("sub")
+        
+        if email is None:
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="Invalid token payload"
+            )
+            
+    except JWTError:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Invalid or expired token",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
+    
+    # Buscar usuario en la base de datos
+    user = db.query(User).filter(User.email == email).first()
+    if user is None:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="User not found"
+        )
+    
     return user
 
-async def get_current_active_user(
+def get_current_active_user(
     current_user: User = Depends(get_current_user)
 ) -> User:
-    """Dependencia para obtener usuario activo"""
-    # Aquí podrías agregar validaciones adicionales como:
-    # - Usuario bloqueado
-    # - Usuario verificado
-    # - etc.
-    return current_user
-
-async def get_admin_user(
-    current_user: User = Depends(get_current_user),
-) -> User:
     """
-    Verifica que el usuario actual tenga privilegios de administrador.
-    """ 
-    if current_user.user.role != 'admin':
+    Verifica que el usuario esté activo.
+    """
+    if not current_user.is_active:
         raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="The user doesn't have enough privileges"
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Inactive user"
         )
     return current_user
     

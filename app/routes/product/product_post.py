@@ -6,7 +6,7 @@ from ...database.database import get_db
 from ...models.product_model import Product, Category
 from ...schemas import product_schemas
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
-from ...core.dependencies import get_current_admin_user, get_current_client_user
+from ...core.dependencies import get_current_admin_or_staff_user
 from ...models.product_model import ProductCategory 
 from ...models.user_model import User
 
@@ -14,15 +14,28 @@ router = APIRouter()
 
 @router.post(
     "/",
-    response_model=product_schemas.ProductResponse,
+    response_model=product_schemas.ProductDetailResponse,
     description="se crea un nuevo producto",
     tags=["Products"]
 )
 def create_product(
     product: product_schemas.ProductCreate,
     db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_admin_user),
+    current_user: User = Depends(get_current_admin_or_staff_user),
 ): 
+    """
+    Crea un nuevo producto.
+    
+    Solo usuarios con rol ADMIN o STORE_STAFF pueden crear productos.
+    
+    - **name**: Nombre del producto
+    - **price**: Precio del producto
+    - **sku**: SKU único del producto
+    - **description**: Descripción del producto
+    - **online_stock**: Stock disponible
+    - **supplier_id**: ID del proveedor (opcional)
+    - **category_ids**: Lista de IDs de categorías
+    """
         
     existing_product = db.query(Product).filter(Product.sku == product.sku).first()
     if existing_product:
@@ -32,7 +45,7 @@ def create_product(
         ) 
         
     if product.supplier_id:
-        supplier = db.query(Supplier).filter(Supplier.supplier == product.supplier_id).first()
+        supplier = db.query(Supplier).filter(Supplier.supplier_id == product.supplier_id).first()
         if not supplier:
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
@@ -45,10 +58,13 @@ def create_product(
             Category.category_id.in_(product.category_ids)
         ).all()
         
-        if len(existing_categories) != len(product.category_ids):
+        existing_category_ids = {cat.category_id for cat in existing_categories}
+        missing_category_ids = set(product.category_ids) - existing_category_ids
+        
+        if missing_category_ids:
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
-                detail="One or more category IDs are invalid"
+                detail=f"Categories with IDs {list(missing_category_ids)} not found"
             )
             
     try:

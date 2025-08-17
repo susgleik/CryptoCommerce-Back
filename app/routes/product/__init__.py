@@ -2,12 +2,14 @@ from fastapi import APIRouter
 
 from .product_post import router as product_post
 from .product_gets import router as product_gets
+from .product_puts import router as product_puts
 
 # main router for product-related endpoints
 router = APIRouter()
 
 router.include_router(product_post)
 router.include_router(product_gets)
+router.include_router(product_puts)
 
 
 # Metadata
