@@ -33,6 +33,12 @@ def delete_product(
         HTTP 204 No Content si la eliminación fue exitosa
     """
     
+    print(f"=== DELETE PRODUCT DEBUG ===")
+    print(f"Product ID: {product_id}")
+    print(f"User: {current_user.email}")
+    print(f"User Type: {current_user.user_type}")
+    print(f"User Type Type: {type(current_user.user_type)}")
+    
     # check if product exists
     db_product = db.query(Product).filter(Product.product_id == product_id).first()
     if not db_product:
@@ -40,6 +46,7 @@ def delete_product(
             status_code=status.HTTP_404_NOT_FOUND,
             detail=f"Product with ID {product_id} not found"
         )
+    print(f"Product found: {db_product.name} (ID: {db_product.product_id})")
     
     try:
         # save info for log before deletion
@@ -53,7 +60,7 @@ def delete_product(
         print(f"Product {product_id} ({product_name}, SKU: {product_sku}) deleted by user {current_user.username}")
         
         
-        return {"message": "Product deleted successfully"}
+        return None
     
     except IntegrityError as e:
         db.rollback()

@@ -44,7 +44,7 @@ def register_user(
             username=user.username,
             email=user.email,
             password_hash=get_password_hash(user.password),
-            user_type=user.user_type,  # Usará 'common' si no se especifica
+            user_type=user.user_type,  # Esto ahora usará string directamente
             is_active=True
         )
         
@@ -65,36 +65,42 @@ def register_user(
     description="Login de usuarios",
     tags=["Authentication"]
 )
-async def login(
+def login(
     form_data: user_schemas.UserLogin,
     db: Session = Depends(get_db)
 ):
     try:
+        print("helloo eso se esta trqueriando")
         # Buscar usuario por email
         user = db.query(User).filter(User.email == form_data.email).first()
+        print(f"Attempting login for user: {form_data.email}")
+        print(f"User found: {form_data.password}")
         
         # Verificar si el usuario existe y la contraseña es correcta
         if not user or not verify_password(form_data.password, user.password_hash):
             raise HTTPException(
                 status_code=status.HTTP_401_UNAUTHORIZED,
-                detail="Incorrect email or password"
+                detail="Incorrect email or password",
+                headers={"WWW-Authenticate": "Bearer"}
             )
             
         if not user.is_active:
             raise HTTPException(
                 status_code=status.HTTP_401_UNAUTHORIZED,
-                detail="User is inactive"
+                detail="User is inactive",
+                headers={"WWW-Authenticate": "Bearer"}
             )    
             
-        user.last_login = datetime.now(timezone.utc)  # Actualizar la última fecha de inicio de sesión
-        print(f"User {user.email} logged in at {user.last_login}")
+        # Actualizar última fecha de login
         try:
-            db.commit() 
+            user.last_login = datetime.now(timezone.utc)
+            db.commit()
             db.refresh(user)
+            print(f"User {user.email} logged in at {user.last_login}")
         except Exception as e:
             db.rollback()
             # Si falla la actualización, registrar pero no fallar el login
-            print(f"Warning: Failed to update last_login for user {user.email}: {str(e)}")    
+            print(f"Warning: Failed to update last_login for user {user.email}: {str(e)}")  
         
         # Crear el token de acceso
         access_token = create_access_token(data={"sub": user.email})
@@ -106,7 +112,7 @@ async def login(
             "user": user
         }   
     except HTTPException as he:
-        raise he
+        raise 
     except Exception as e:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,

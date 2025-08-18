@@ -1,19 +1,16 @@
 from pydantic import BaseModel, EmailStr, Field, validator
-from typing import Optional, List
+from typing import Optional, List, Literal
 from datetime import datetime
-from enum import Enum
 
-class UserType(str, Enum):
-    COMMON = "common"
-    ADMIN = "admin"
-    STORE_STAFF = "store_staff"
+# Usar Literal en lugar de Enum para mayor compatibilidad
+UserTypeEnum = Literal["common", "admin", "store_staff"]
 
 # Base schema para validar datos comunes
 class UserBase(BaseModel):
     username: str = Field(..., min_length=3, max_length=100, description="Nombre de usuario")
     email: EmailStr = Field(..., description="Email del usuario")
     is_active: Optional[bool] = True
-    user_type: UserType = UserType.COMMON
+    user_type: UserTypeEnum = "common"
 
 # Schema para crear un usuario (request)
 class UserCreate(UserBase):
@@ -37,7 +34,7 @@ class UserUpdate(BaseModel):
     current_password: Optional[str] = None
     new_password: Optional[str] = None
     is_active: Optional[bool] = None
-    user_type: Optional[UserType] = None
+    user_type: Optional[UserTypeEnum] = None
 
 # Schema para respuesta de usuario (sin password)
 class UserResponse(UserBase):

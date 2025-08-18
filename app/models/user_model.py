@@ -6,10 +6,15 @@ from sqlalchemy.orm import relationship
 from enum import Enum as PyEnum
 
 #modelos relacionados con los usuarios
-class UserRole(PyEnum):
+class UserRole:
     COMMON = 'common'
     ADMIN = 'admin'
     STORE_STAFF = 'store_staff'
+    
+    @classmethod
+    def all_values(cls):
+        """Retorna todos los valores como lista"""
+        return [cls.COMMON, cls.ADMIN, cls.STORE_STAFF]
 
 class User(Base):
     __tablename__ = "users"
@@ -20,7 +25,7 @@ class User(Base):
     password_hash = Column(String(255), nullable=False)
     is_active = Column(Boolean, default=True)
     user_type = Column(
-        Enum(UserRole, name='user_type_enum'), 
+        Enum(UserRole.COMMON, UserRole.ADMIN, UserRole.STORE_STAFF, name='user_type_enum'), 
         nullable=False, 
         default=UserRole.COMMON
     )
