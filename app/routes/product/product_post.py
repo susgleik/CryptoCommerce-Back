@@ -120,3 +120,68 @@ def create_product(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Error creating product: {str(e)}"
         )
+
+
+@router.post(
+    "/{product_id}/restore",
+    response_model=dict,
+    description="Reactiva un producto desactivado",
+    tags=["Products"]
+)
+def restore_product(
+    product_id: int,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_admin_or_staff_user)
+):
+    """
+    Reactiva un producto que fue desactivado anteriormente.
+    
+    Solo usuarios con rol ADMIN o STORE_STAFF pueden reactivar productos.
+    
+    - **product_id**: ID del producto a reactivar
+    
+    Returns:
+        Mensaje de confirmación con detalles del producto reactivado
+    """
+    
+    # Verificar que el producto existe
+    db_product = db.query(Product).filter(Product.product_id == product_id).first()
+    if not db_product:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Product with ID {product_id} not found"
+        )
+    
+    # Verificar si ya está activo
+    if db_product.is_active:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=f"Product {product_id} is already active"
+        )
+    
+    try:
+        # Reactivar el producto
+        db_product.is_active = True
+        db.commit()
+        db.refresh(db_product)
+        
+        print(f"Product {product_id} ({db_product.name}) restored by {current_user.user_type} {current_user.email}")
+        
+        return {
+            "message": "Product successfully reactivated",
+            "product_id": product_id,
+            "product_name": db_product.name,
+            "product_sku": db_product.sku,
+            "is_active": db_product.is_active,
+            "action_performed_by": {
+                "user_type": current_user.user_type,
+                "email": current_user.email
+            }
+        }
+        
+    except Exception as e:
+        db.rollback()
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Error reactivating product: {str(e)}"
+        )

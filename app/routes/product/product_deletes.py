@@ -77,3 +77,70 @@ def delete_product(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Unexpected error deleting product: {str(e)}"
         )
+        
+@router.delete(
+    "/{product_id}/soft",
+    response_model=dict,
+    description="Desactiva un producto (eliminación suave)",
+    tags=["Products"]
+)
+def soft_delete_product(
+    product_id: int,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_admin_or_staff_user)
+):
+    """
+    Desactiva un producto en lugar de eliminarlo permanentemente (soft delete).
+    
+    Esta es una alternativa más segura a la eliminación permanente.
+    El producto se marca como inactivo pero se mantiene en la base de datos.
+    
+    Solo usuarios con rol ADMIN o STORE_STAFF pueden desactivar productos.
+    
+    - **product_id**: ID del producto a desactivar
+    
+    Returns:
+        Mensaje de confirmación con detalles del producto desactivado
+    """
+    
+    # Verificar que el producto existe
+    db_product = db.query(Product).filter(Product.product_id == product_id).first()
+    if not db_product:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Product with ID {product_id} not found"
+        )
+    
+    # Verificar si ya está inactivo
+    if not db_product.is_active:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=f"Product {product_id} is already inactive"
+        )
+    
+    try:
+        # Desactivar el producto
+        db_product.is_active = False
+        db.commit()
+        db.refresh(db_product)
+        
+        print(f"Product {product_id} ({db_product.name}) soft deleted by {current_user.user_type} {current_user.email}")
+        
+        return {
+            "message": "Product successfully deactivated",
+            "product_id": product_id,
+            "product_name": db_product.name,
+            "product_sku": db_product.sku,
+            "is_active": db_product.is_active,
+            "action_performed_by": {
+                "user_type": current_user.user_type,
+                "email": current_user.email
+            }
+        }
+        
+    except Exception as e:
+        db.rollback()
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Error deactivating product: {str(e)}"
+        )
