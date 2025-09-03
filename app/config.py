@@ -3,7 +3,15 @@ from typing import Optional, List
 import os 
 
 class Settings(BaseSettings):
-    # Database settings
+    # Database settings for local dev
+    #database_url: str
+    
+    # Database settings for azure
+    db_user: str
+    db_password: str
+    db_name: str
+    db_host: str
+    db_port: int = 3306
     database_url: str
     
     # security 
