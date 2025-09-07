@@ -1,16 +1,31 @@
 from fastapi import Depends, HTTPException, status
-from .security import get_current_active_user
-from ..models.user_model import User, UserRole
+from .security import get_current_active_user, get_current_active_admin_user
+from ..models.user_model import User
 
-def get_current_admin_user(
+# Dependencias para usuarios normales (tokens normales)
+def get_current_client_user(
     current_user: User = Depends(get_current_active_user)
 ) -> User:
     """
-    Dependencia para verificar que el usuario actual es ADMIN
+    Dependencia para verificar que el usuario actual es COMMON (cliente)
+    Solo funciona con tokens de usuario normal
     """
-    print(f"Checking admin permissions for: {current_user.email}, type: {current_user.user_type}")
-    
-    if current_user.user_type != UserRole.ADMIN:
+    if current_user.user_type != 'common':
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="No tienes permisos para realizar esta acción. Se requiere rol CLIENT."
+        )
+    return current_user
+
+# Dependencias para administradores (usan tokens admin)
+def get_current_admin_user(
+    current_user: User = Depends(get_current_active_admin_user)
+) -> User:
+    """
+    Dependencia para verificar que el usuario actual es ADMIN
+    Solo funciona con tokens admin
+    """
+    if current_user.user_type != 'admin':
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="No tienes permisos para realizar esta acción. Se requiere rol ADMIN."
@@ -18,12 +33,13 @@ def get_current_admin_user(
     return current_user
 
 def get_current_store_staff_user(
-    current_user: User = Depends(get_current_active_user)
+    current_user: User = Depends(get_current_active_admin_user)
 ) -> User:
     """
     Dependencia para verificar que el usuario actual es STORE_STAFF
+    Solo funciona con tokens admin
     """
-    if current_user.user_type != UserRole.STORE_STAFF:
+    if current_user.user_type != 'store_staff':
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="No tienes permisos para realizar esta acción. Se requiere rol STORE_STAFF."
@@ -31,36 +47,15 @@ def get_current_store_staff_user(
     return current_user
 
 def get_current_admin_or_staff_user(
-    current_user: User = Depends(get_current_active_user)
+    current_user: User = Depends(get_current_active_admin_user)
 ) -> User:
     """
     Dependencia para verificar que el usuario actual es ADMIN o STORE_STAFF
+    Solo funciona con tokens admin
     """
-    print(f"Checking admin/staff permissions for: {current_user.email}")
-    print(f"User type: '{current_user.user_type}' (type: {type(current_user.user_type)})")
-    print(f"UserRole.ADMIN: '{UserRole.ADMIN}' (type: {type(UserRole.ADMIN)})")
-    print(f"UserRole.STORE_STAFF: '{UserRole.STORE_STAFF}' (type: {type(UserRole.STORE_STAFF)})")
-    
-    # Usar comparación de strings directa para evitar problemas
     if current_user.user_type not in ['admin', 'store_staff']:
-        print(f"Access denied for user type: {current_user.user_type}")
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="No tienes permisos para realizar esta acción. Se requiere rol ADMIN o STORE_STAFF."
-        )
-    
-    print(f"Access granted for user: {current_user.email}")
-    return current_user
-
-def get_current_client_user(
-    current_user: User = Depends(get_current_active_user)
-) -> User:
-    """
-    Dependencia para verificar que el usuario actual es COMMON (cliente)
-    """
-    if current_user.user_type != UserRole.COMMON:
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="No tienes permisos para realizar esta acción. Se requiere rol CLIENT."
         )
     return current_user

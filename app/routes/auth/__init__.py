@@ -1,10 +1,12 @@
 from fastapi import APIRouter
 from .auth_users import router as auth_users_router
+from .admin_auth import router as auth_admin_router
 
 # main router for authentication-related endpoints
 router = APIRouter()
 
 router.include_router(auth_users_router)
+router.include_router(auth_admin_router)
 
 
 # Metadata

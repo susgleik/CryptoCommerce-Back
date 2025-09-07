@@ -36,16 +36,17 @@ class UserUpdate(BaseModel):
     is_active: Optional[bool] = None
     user_type: Optional[UserTypeEnum] = None
 
-# Schema para respuesta de usuario (sin password)
+# Schema para respuesta de usuario (sin password) - CORREGIDO CON ALIAS
 class UserResponse(UserBase):
-    user_id: int
-    created_at: datetime
+    id: int = Field(alias="user_id", description="ID único del usuario")
+    created_at: Optional[datetime] = None
     updated_at: Optional[datetime] = None
     last_login: Optional[datetime] = None
     
     class Config:
         from_attributes = True
-        orm_mode = True
+        populate_by_name = True  # Permite usar tanto 'id' como 'user_id'
+        allow_population_by_field_name = True  # Para retrocompatibilidad
 
 # Token schemas
 class Token(BaseModel):
@@ -59,7 +60,59 @@ class TokenData(BaseModel):
     user_type: Optional[str] = None
     exp: Optional[datetime] = None
 
-# User Profile Schemas
+# ADMIN SCHEMAS - CORREGIDOS CON ALIAS
+
+class AdminUserInfo(BaseModel):
+    id: int = Field(alias="user_id", description="ID único del usuario")
+    username: str
+    email: EmailStr
+    user_type: str
+    is_active: bool
+    last_login: Optional[datetime] = None
+
+    class Config:
+        from_attributes = True
+        populate_by_name = True  # Permite usar tanto 'id' como 'user_id'
+        allow_population_by_field_name = True  # Para retrocompatibilidad
+
+class AdminTokenResponse(BaseModel):
+    access_token: str
+    token_type: str
+    user: AdminUserInfo
+    permissions: List[str]
+
+# Schema para verificar tokens admin
+class TokenVerification(BaseModel):
+    valid: bool
+    user: AdminUserInfo
+    permissions: List[str]
+
+# Schemas adicionales para funciones admin
+class UserRoleUpdate(BaseModel):
+    user_type: str
+    
+    @validator('user_type')
+    def validate_user_type(cls, v):
+        allowed_types = ['common', 'store_staff', 'admin']
+        if v not in allowed_types:
+            raise ValueError(f'user_type debe ser uno de: {allowed_types}')
+        return v
+
+class UserStatusUpdate(BaseModel):
+    is_active: bool
+
+class StaffUserCreate(BaseModel):
+    username: str
+    email: EmailStr
+    password: str
+    
+    @validator('password')
+    def validate_password(cls, v):
+        if len(v) < 6:
+            raise ValueError('La contraseña debe tener al menos 6 caracteres')
+        return v
+
+# User Profile Schemas (si los necesitas)
 class UserProfileBase(BaseModel):
     first_name: Optional[str] = None
     last_name: Optional[str] = None
@@ -79,7 +132,6 @@ class UserProfileResponse(UserProfileBase):
     
     class Config:
         from_attributes = True
-        orm_mode = True
 
 # Schema completo para respuesta de usuario con perfil
 class UserWithProfileResponse(UserResponse):
@@ -87,11 +139,10 @@ class UserWithProfileResponse(UserResponse):
     
     class Config:
         from_attributes = True
-        orm_mode = True
 
 # Schema para respuesta paginada
 class PaginatedUserResponse(BaseModel):
-    items: list[UserResponse]
+    items: List[UserResponse]
     total: int
     page: int
     items_per_page: int

@@ -20,10 +20,10 @@ def create_access_token(data: dict, expires_delta: Optional[timedelta] = None, i
     to_encode = data.copy()
     
     if expires_delta:
-        expire = datetime.utcnow(timezone.utc) + expires_delta
+        expire = datetime.now(timezone.utc) + expires_delta
     else:
         minutes = ADMIN_ACCESS_TOKEN_EXPIRE_MINUTES if is_admin else ACCESS_TOKEN_EXPIRE_MINUTES
-        expire = datetime.utcnow(timezone.utc) + timedelta(minutes=minutes)
+        expire = datetime.now(timezone.utc) + timedelta(minutes=minutes)
     
     to_encode.update({
         "exp": expire, 
