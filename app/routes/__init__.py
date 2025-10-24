@@ -8,6 +8,7 @@ from fastapi import APIRouter
 from .product import router as product_router
 from .auth import router as auth_router
 from .user import router as user_router
+from .category import router as category_router
 
 main_router = APIRouter(prefix="/api/v1")
 
@@ -29,9 +30,17 @@ main_router.include_router(
     tags=["Products"]
     )   
 
+main_router.include_router(
+    category_router,
+    prefix="/categories",
+    tags=["Categories"]
+)
+
 __all__ = [
     "product_router",
     "auth_router",
+    "user_router",
+    "category_router"
     ]
 
 #metada for the module 
