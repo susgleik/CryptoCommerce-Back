@@ -41,9 +41,9 @@ class ProductResponse(ProductBase):
     supplier_id: Optional[int] = None
     created_at: datetime
     updated_at: datetime
-    
+
     class Config:
-        orm_mode = True
+        from_attributes = True
 
 # Category Schemas
 class CategoryBase(BaseModel):
@@ -67,9 +67,9 @@ class CategoryResponse(CategoryBase):
     category_id: int
     created_at: datetime
     updated_at: datetime
-    
+
     class Config:
-        orm_mode = True
+        from_attributes = True
 
 # Supplier Schemas
 class SupplierBase(BaseModel):
@@ -91,17 +91,17 @@ class SupplierResponse(SupplierBase):
     supplier_id: int
     created_at: datetime
     updated_at: datetime
-    
+
     class Config:
-        orm_mode = True
+        from_attributes = True
 
 # Product with relationships
 class ProductDetailResponse(ProductResponse):
     supplier: Optional[SupplierResponse] = None
     categories: List[CategoryResponse] = []
-    
+
     class Config:
-        orm_mode = True
+        from_attributes = True
 
 # Product Review Schemas
 class ReviewStatusEnum(str, Enum):
@@ -127,9 +127,9 @@ class ProductReviewResponse(ProductReviewBase):
     user_id: int
     created_at: datetime
     status: ReviewStatusEnum
-    
+
     class Config:
-        orm_mode = True
+        from_attributes = True
 
 # Product Attribute Schemas
 class DataTypeEnum(str, Enum):
@@ -160,9 +160,9 @@ class ProductAttributeTypeUpdate(BaseModel):
 class ProductAttributeTypeResponse(ProductAttributeTypeBase):
     attribute_type_id: int
     created_at: datetime
-    
+
     class Config:
-        orm_mode = True
+        from_attributes = True
 
 class ProductAttributeValueBase(BaseModel):
     product_id: int
@@ -190,9 +190,9 @@ class ProductAttributeValueUpdate(BaseModel):
 
 class ProductAttributeValueResponse(ProductAttributeValueBase):
     value_id: int
-    
+
     class Config:
-        orm_mode = True
+        from_attributes = True
     
     
 

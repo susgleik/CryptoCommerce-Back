@@ -46,7 +46,6 @@ class UserResponse(UserBase):
     class Config:
         from_attributes = True
         populate_by_name = True  # Permite usar tanto 'id' como 'user_id'
-        allow_population_by_field_name = True  # Para retrocompatibilidad
 
 # Token schemas
 class Token(BaseModel):
@@ -73,7 +72,6 @@ class AdminUserInfo(BaseModel):
     class Config:
         from_attributes = True
         populate_by_name = True  # Permite usar tanto 'id' como 'user_id'
-        allow_population_by_field_name = True  # Para retrocompatibilidad
 
 class AdminTokenResponse(BaseModel):
     access_token: str
