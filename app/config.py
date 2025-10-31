@@ -29,7 +29,10 @@ class Settings(BaseSettings):
     allowed_origins: str = "*"
     allowed_methods: str = "GET,POST,PUT,DELETE,OPTIONS"
     allowed_headers: str = "*"
-    
+
+    # Database testing mode
+    db_testing_mode: bool = False
+
     class Config:
         env_file = ".env"
         case_sensitive = False
